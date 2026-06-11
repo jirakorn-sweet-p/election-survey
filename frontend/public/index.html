@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ระบบสำรวจสิทธิเลือกตั้ง — Admin</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{
+  --navy:#0f2847;--navy2:#1e4080;--navy3:#2d5fa6;
+  --gold:#d4a017;--gold2:#f0c040;
+  --green:#16803c;--red:#be1b1b;--orange:#c45c00;
+  --bg:#f0f4f9;--surface:#fff;
+  --border:#d0daea;--border2:#b0c4de;
+  --text:#1a2640;--text2:#3d546e;--text3:#7a91aa;
+  --radius:12px;--radius-sm:8px;--shadow:0 2px 16px rgba(15,40,71,.10);--shadow-lg:0 8px 32px rgba(15,40,71,.18);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.65}
+
+/* Login */
+.login-bg{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 60%,var(--navy3) 100%);padding:1rem}
+.login-card{background:#fff;border-radius:16px;box-shadow:0 24px 64px rgba(0,0,0,.35);width:100%;max-width:400px;overflow:hidden}
+.login-head{background:linear-gradient(135deg,var(--navy),var(--navy2));padding:2rem;text-align:center;color:#fff}
+.login-emblem{width:72px;height:72px;background:var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 1rem}
+.login-head h1{font-size:20px;font-weight:700}
+.login-head p{font-size:13px;opacity:.7;margin-top:4px}
+.login-body{padding:2rem}
+.login-field{margin-bottom:1.25rem}
+.login-field label{display:block;font-size:13px;font-weight:700;color:var(--text2);margin-bottom:6px}
+.login-field input{width:100%;border:1.5px solid var(--border2);border-radius:var(--radius-sm);padding:10px 14px;font-size:15px;font-family:inherit;transition:.15s}
+.login-field input:focus{outline:none;border-color:var(--navy2);box-shadow:0 0 0 3px rgba(30,64,128,.12)}
+.btn-login{width:100%;background:var(--navy2);color:#fff;border:none;border-radius:var(--radius-sm);padding:13px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;transition:.15s;margin-top:.5rem}
+.btn-login:hover{background:var(--navy)}
+.btn-login:disabled{opacity:.6;cursor:not-allowed}
+.login-error{background:#fee2e2;border:1px solid #fca5a5;color:#991b1b;border-radius:var(--radius-sm);padding:10px 14px;font-size:14px;margin-bottom:1rem;display:none}
+
+/* App */
+.topbar{background:var(--navy);color:#fff;padding:0 1.5rem;display:flex;align-items:center;justify-content:space-between;height:60px;position:sticky;top:0;z-index:100;box-shadow:0 2px 16px rgba(0,0,0,.28);flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:12px;font-size:16px;font-weight:700}
+.emblem{width:36px;height:36px;background:var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.topbar-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.nav-tabs{display:flex;gap:4px}
+.nav-tab{padding:6px 14px;border-radius:var(--radius-sm);cursor:pointer;font-size:13px;color:rgba(255,255,255,.7);transition:.15s;border:none;background:none;font-family:inherit;font-weight:600}
+.nav-tab:hover{color:#fff;background:rgba(255,255,255,.1)}
+.nav-tab.active{color:#fff;background:rgba(255,255,255,.18)}
+.user-chip{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:4px 12px;font-size:13px;color:#fff}
+.btn-logout{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:var(--radius-sm);padding:5px 12px;font-size:13px;cursor:pointer;font-family:inherit;transition:.15s}
+.btn-logout:hover{background:rgba(255,255,255,.2)}
+
+/* Layout */
+.container{max-width:1000px;margin:0 auto;padding:2rem 1rem}
+.card{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;margin-bottom:1rem}
+.card-header{background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 100%);color:#fff;padding:1.25rem 1.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.card-header-left{display:flex;align-items:center;gap:10px}
+.card-header h2{font-size:16px;font-weight:700}
+.card-header .sub{font-size:13px;opacity:.7;margin-top:2px}
+.card-body{padding:1.5rem}
+
+/* Stats */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:1.5rem}
+.stat-card{background:var(--surface);border-radius:var(--radius-sm);border:1px solid var(--border);padding:1.25rem;text-align:center}
+.stat-val{font-size:28px;font-weight:700;line-height:1}
+.stat-lbl{font-size:12px;color:var(--text3);margin-top:4px;font-weight:600}
+.stat-card.navy .stat-val{color:var(--navy2)}
+.stat-card.green .stat-val{color:var(--green)}
+.stat-card.red .stat-val{color:var(--red)}
+.stat-card.gold .stat-val{color:var(--orange)}
+
+/* Table */
+.tbl-toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:1rem}
+.search-input{flex:1;min-width:200px;border:1.5px solid var(--border2);border-radius:var(--radius-sm);padding:8px 14px;font-size:14px;font-family:inherit}
+.sort-select{border:1.5px solid var(--border2);border-radius:var(--radius-sm);padding:8px 12px;font-size:14px;font-family:inherit;background:#fff}
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{background:#eef2fa;padding:10px 14px;text-align:left;font-size:11px;font-weight:700;color:var(--navy2);text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:10px 14px;border-bottom:1px solid var(--border);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#f8fafd}
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:12px;font-weight:700;gap:3px}
+.badge-navy{background:#dde8f5;color:var(--navy2)}
+.badge-green{background:#dcfce7;color:var(--green)}
+.badge-red{background:#fee2e2;color:var(--red)}
+.badge-gold{background:#fef9c3;color:#92400e}
+.empty-state{text-align:center;padding:3rem 1rem;color:var(--text3)}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 16px;border-radius:var(--radius-sm);border:none;cursor:pointer;font-size:13px;font-family:inherit;font-weight:700;transition:.15s}
+.btn-primary{background:var(--navy2);color:#fff}.btn-primary:hover{background:var(--navy)}
+.btn-success{background:var(--green);color:#fff}.btn-success:hover{background:#136834}
+.btn-danger{background:var(--red);color:#fff}.btn-danger:hover{background:#991b1b}
+.btn-outline{background:#fff;color:var(--text2);border:1.5px solid var(--border2)}.btn-outline:hover{border-color:var(--navy2);color:var(--navy2)}
+.btn-gold{background:var(--gold);color:#fff}.btn-gold:hover{background:#b8890e}
+.btn-sm{padding:4px 10px;font-size:12px}
+
+/* Alert */
+.alert{padding:12px 16px;border-radius:var(--radius-sm);font-size:14px;margin-bottom:1rem;display:none}
+.alert-success{background:#dcfce7;border:1px solid #86efac;color:#166534}
+.alert-error{background:#fee2e2;border:1px solid #fca5a5;color:#991b1b}
+
+/* Modal */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center}
+.modal-bg.show{display:flex}
+.modal{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow-lg);width:100%;max-width:580px;max-height:90vh;overflow-y:auto;padding:1.5rem}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem}
+.modal-header h3{font-size:17px;font-weight:700;color:var(--navy)}
+.modal-close{background:none;border:none;font-size:22px;cursor:pointer;color:var(--text3)}
+.modal-sec{margin-bottom:1rem;padding-bottom:1rem;border-bottom:1px solid var(--border)}
+.modal-sec:last-child{border-bottom:none;margin-bottom:0}
+.modal-sec-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--navy2);margin-bottom:8px}
+.dr{display:flex;gap:8px;margin-bottom:5px;font-size:14px}
+.dr .dl{color:var(--text2);min-width:140px;flex-shrink:0;font-weight:600}
+
+/* Loader */
+.loader{display:none;text-align:center;padding:2rem;color:var(--text3)}
+.spinner{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--navy2);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 8px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+@media(max-width:768px){
+  .topbar{height:auto;padding:.75rem 1rem;gap:8px}
+  .topbar-right{width:100%;justify-content:space-between}
+  .nav-tabs{flex-wrap:wrap;gap:3px}
+  .nav-tab{padding:5px 10px;font-size:12px}
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+  .container{padding:1rem .75rem}
+  .tbl-toolbar{flex-direction:column;align-items:stretch}
+}
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<!-- Login -->
+<div id="page-login" class="login-bg">
+  <div class="login-card">
+    <div class="login-head">
+      <div class="login-emblem">🗳</div>
+      <h1>ระบบสำรวจสิทธิเลือกตั้ง</h1>
+      <p>กรุณาเข้าสู่ระบบเพื่อดูข้อมูล</p>
+    </div>
+    <div class="login-body">
+      <div class="login-error" id="login-error"></div>
+      <div class="login-field"><label>ชื่อผู้ใช้</label><input type="text" id="l-user" autocomplete="username" placeholder="ชื่อผู้ใช้"></div>
+      <div class="login-field"><label>รหัสผ่าน</label><input type="password" id="l-pass" autocomplete="current-password" placeholder="รหัสผ่าน" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <button class="btn-login" id="btn-login" onclick="doLogin()">เข้าสู่ระบบ</button>
+    </div>
+  </div>
+</div>
+
+<!-- App -->
+<div id="app" style="display:none">
+  <div class="topbar">
+    <div class="brand"><div class="emblem">🗳</div><div>ระบบสำรวจสิทธิเลือกตั้ง</div></div>
+    <div class="topbar-right">
+      <div class="nav-tabs">
+        <button class="nav-tab active" onclick="showPage('dashboard')">📊 Dashboard</button>
+        <button class="nav-tab" onclick="showPage('list')">📋 รายการ</button>
+        <button class="nav-tab" onclick="showPage('audit')">🕐 ประวัติ</button>
+      </div>
+      <div class="user-chip">👤 <span id="username-display"></span></div>
+      <button class="btn-logout" onclick="doLogout()">ออกจากระบบ</button>
+    </div>
+  </div>
+
+  <!-- Dashboard -->
+  <div id="page-dashboard" class="container">
+    <div id="alert-dash" class="alert"></div>
+    <div class="stats-grid" id="stats-grid">
+      <div class="stat-card navy"><div class="stat-val" id="s-total">—</div><div class="stat-lbl">กำลังพลทั้งหมด</div></div>
+      <div class="stat-card green"><div class="stat-val" id="s-pvote">—</div><div class="stat-lbl">กำลังพลมีสิทธิ</div></div>
+      <div class="stat-card red"><div class="stat-val" id="s-pnovote">—</div><div class="stat-lbl">กำลังพลไม่มีสิทธิ</div></div>
+      <div class="stat-card gold"><div class="stat-val" id="s-fvote">—</div><div class="stat-lbl">สมาชิกครอบครัวมีสิทธิ</div></div>
+    </div>
+    <div class="stats-grid" style="grid-template-columns:repeat(2,1fr)">
+      <div class="stat-card navy"><div class="stat-val" id="s-ftotal">—</div><div class="stat-lbl">สมาชิกครอบครัวทั้งหมด</div></div>
+      <div class="stat-card red"><div class="stat-val" id="s-fnovote">—</div><div class="stat-lbl">สมาชิกครอบครัวไม่มีสิทธิ</div></div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;gap:10px;margin-bottom:1rem">
+      <button class="btn btn-gold" onclick="exportExcel()">⬇ Export Excel</button>
+      <a href="/survey" target="_blank" class="btn btn-primary">🗳 เปิดแบบสำรวจ</a>
+    </div>
+  </div>
+
+  <!-- List -->
+  <div id="page-list" class="container" style="display:none">
+    <div id="alert-list" class="alert"></div>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-header-left">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/></svg>
+          <div><h2>รายการกำลังพลทั้งหมด</h2><div class="sub" id="list-count">—</div></div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-gold btn-sm" onclick="exportExcel()">⬇ Excel</button>
+          <button class="btn btn-outline btn-sm" onclick="loadList()" style="color:#fff;border-color:rgba(255,255,255,.4)">↻</button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="tbl-toolbar">
+          <input type="text" class="search-input" id="search-input" placeholder="🔍 ค้นหา ชื่อ ยศ..." oninput="debounceSearch()">
+          <select class="sort-select" id="sort-select" onchange="loadList()">
+            <option value="created">วันที่บันทึก</option>
+            <option value="rank">ยศ</option>
+            <option value="name">ชื่อ</option>
+          </select>
+          <select class="sort-select" id="order-select" onchange="loadList()">
+            <option value="desc">มากไปน้อย</option>
+            <option value="asc">น้อยไปมาก</option>
+          </select>
+        </div>
+        <div class="loader" id="list-loader"><div class="spinner"></div>กำลังโหลด...</div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr>
+              <th>#</th><th>ยศ / ชื่อ-นามสกุล</th>
+              <th>สิทธิตนเอง</th><th>เขต/หน่วยเลือกตั้ง</th>
+              <th>ผู้มีสิทธิในครอบครัว</th><th>จัดการ</th>
+            </tr></thead>
+            <tbody id="list-body"><tr><td colspan="6"><div class="empty-state">กำลังโหลด...</div></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Audit -->
+  <div id="page-audit" class="container" style="display:none">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-header-left">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <div><h2>ประวัติการแก้ไขข้อมูล</h2><div class="sub">บันทึกทุกการเพิ่ม แก้ไข และลบ</div></div>
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="loadAudit()" style="color:#fff;border-color:rgba(255,255,255,.4)">↻</button>
+      </div>
+      <div class="card-body">
+        <div class="loader" id="audit-loader"><div class="spinner"></div>กำลังโหลด...</div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>วันที่/เวลา</th><th>การกระทำ</th><th>ชื่อกำลังพล</th><th>ผู้ดำเนินการ</th><th>รายละเอียด</th></tr></thead>
+            <tbody id="audit-body"><tr><td colspan="5"><div class="empty-state">กำลังโหลด...</div></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-bg" id="detail-modal" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-title">รายละเอียด</h3>
+      <button class="modal-close" onclick="document.getElementById('detail-modal').classList.remove('show')">×</button>
+    </div>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<script>
+const API='/api/surveys';
+let TOKEN=localStorage.getItem('election_token')||'';
+let searchTimer=null;
+
+function authHeaders(){return{'Content-Type':'application/json','Authorization':`Bearer ${TOKEN}`}}
+
+async function checkAuth(){
+  if(!TOKEN){showLogin();return;}
+  try{
+    const r=await fetch('/api/auth/me',{headers:authHeaders()});
+    const j=await r.json();
+    if(j.success){document.getElementById('username-display').textContent=j.username;showApp();}
+    else showLogin();
+  }catch{showLogin();}
+}
+
+function showLogin(){document.getElementById('page-login').style.display='flex';document.getElementById('app').style.display='none';}
+function showApp(){document.getElementById('page-login').style.display='none';document.getElementById('app').style.display='block';}
+
+async function doLogin(){
+  const username=document.getElementById('l-user').value.trim();
+  const password=document.getElementById('l-pass').value;
+  const btn=document.getElementById('btn-login');
+  const err=document.getElementById('login-error');
+  err.style.display='none';
+  if(!username||!password){err.textContent='กรุณากรอกข้อมูลให้ครบ';err.style.display='block';return;}
+  btn.disabled=true;btn.textContent='กำลังเข้าสู่ระบบ...';
+  try{
+    const r=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,password})});
+    const j=await r.json();
+    if(!j.success)throw new Error(j.error);
+    TOKEN=j.token;localStorage.setItem('election_token',TOKEN);
+    document.getElementById('username-display').textContent=j.username;
+    showApp();showPage('dashboard');
+  }catch(e){err.textContent=e.message;err.style.display='block';}
+  finally{btn.disabled=false;btn.textContent='เข้าสู่ระบบ';}
+}
+
+async function doLogout(){
+  await fetch('/api/auth/logout',{method:'POST',headers:authHeaders()}).catch(()=>{});
+  TOKEN='';localStorage.removeItem('election_token');showLogin();
+}
+
+function showPage(p){
+  ['dashboard','list','audit'].forEach(pg=>document.getElementById('page-'+pg).style.display=p===pg?'block':'none');
+  document.querySelectorAll('.nav-tab').forEach((t,i)=>t.classList.toggle('active',i===['dashboard','list','audit'].indexOf(p)));
+  if(p==='dashboard') loadStats();
+  if(p==='list')      loadList();
+  if(p==='audit')     loadAudit();
+}
+
+function showAlert(id,msg,type='success'){
+  const el=document.getElementById(id);
+  if(!el) return;
+  el.className=`alert alert-${type}`;el.innerHTML=msg;el.style.display='block';
+  setTimeout(()=>el.style.display='none',type==='error'?8000:4000);
+}
+
+// ── Stats ──────────────────────────────────────────────────────────────────
+async function loadStats(){
+  try{
+    const r=await fetch('/api/surveys/stats',{headers:authHeaders()});
+    if(r.status===401){doLogout();return;}
+    const {data:d}=await r.json();
+    document.getElementById('s-total').textContent=d.total_personnel;
+    document.getElementById('s-pvote').textContent=d.personnel_with_right;
+    document.getElementById('s-pnovote').textContent=d.personnel_no_right;
+    document.getElementById('s-fvote').textContent=d.family_with_right;
+    document.getElementById('s-ftotal').textContent=d.total_family;
+    document.getElementById('s-fnovote').textContent=d.family_no_right;
+  }catch(e){console.error(e);}
+}
+
+// ── List ───────────────────────────────────────────────────────────────────
+function debounceSearch(){clearTimeout(searchTimer);searchTimer=setTimeout(loadList,400);}
+
+async function loadList(){
+  document.getElementById('list-loader').style.display='block';
+  document.getElementById('list-body').innerHTML='';
+  const search=document.getElementById('search-input').value;
+  const sort=document.getElementById('sort-select').value;
+  const order=document.getElementById('order-select').value;
+  try{
+    const r=await fetch(`${API}?search=${encodeURIComponent(search)}&sort=${sort}&order=${order}`,{headers:authHeaders()});
+    if(r.status===401){doLogout();return;}
+    const {data:rows}=await r.json();
+    document.getElementById('list-count').textContent=`รายการทั้งหมด ${rows.length} ราย`;
+    if(!rows.length){
+      document.getElementById('list-body').innerHTML=`<tr><td colspan="6"><div class="empty-state">ไม่พบข้อมูล</div></td></tr>`;
+      return;
+    }
+    document.getElementById('list-body').innerHTML=rows.map((r,i)=>`
+      <tr>
+        <td><span class="badge badge-navy">${i+1}</span></td>
+        <td><strong>${r.rank}</strong> ${r.first_name} ${r.last_name}</td>
+        <td>${r.has_vote_right
+          ?`<span class="badge badge-green">✓ มีสิทธิ</span>`
+          :`<span class="badge badge-red">✗ ไม่มีสิทธิ</span>`}</td>
+        <td style="font-size:13px">${r.vote_district||'—'}${r.vote_unit?' / '+r.vote_unit:''}</td>
+        <td><span class="badge badge-gold">${r.family_voter_count} คน</span></td>
+        <td>
+          <div style="display:flex;gap:5px">
+            <button class="btn btn-outline btn-sm" onclick="viewDetail(${r.id})">ดู</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteRecord(${r.id})">ลบ</button>
+          </div>
+        </td>
+      </tr>`).join('');
+  }catch(e){document.getElementById('list-body').innerHTML=`<tr><td colspan="6"><div class="empty-state">⚠️ ${e.message}</div></td></tr>`;}
+  finally{document.getElementById('list-loader').style.display='none';}
+}
+
+// ── Detail modal ────────────────────────────────────────────────────────────
+async function viewDetail(id){
+  const r=await fetch(`${API}/${id}`,{headers:authHeaders()});
+  const {data:d}=await r.json();
+  const fmtDate=dt=>{if(!dt) return '—';const x=new Date(dt);return isNaN(x)?'—':x.toLocaleDateString('th-TH',{day:'2-digit',month:'long',year:'numeric'});};
+  document.getElementById('modal-title').textContent=`${d.rank} ${d.first_name} ${d.last_name}`;
+  document.getElementById('modal-body').innerHTML=`
+    <div class="modal-sec">
+      <div class="modal-sec-title">ข้อมูลส่วนตัว</div>
+      <div class="dr"><span class="dl">ยศ</span><span>${d.rank}</span></div>
+      <div class="dr"><span class="dl">ชื่อ-นามสกุล</span><span>${d.first_name} ${d.last_name}</span></div>
+    </div>
+    <div class="modal-sec">
+      <div class="modal-sec-title">สิทธิเลือกตั้ง (ตนเอง)</div>
+      <div class="dr"><span class="dl">สิทธิ</span><span>${d.has_vote_right?'✓ มีสิทธิ':'✗ ไม่มีสิทธิ'}</span></div>
+      ${d.has_vote_right?`
+      <div class="dr"><span class="dl">วันที่เลือกตั้ง</span><span>${fmtDate(d.vote_date)}</span></div>
+      <div class="dr"><span class="dl">เขตเลือกตั้ง</span><span>${d.vote_district||'—'}</span></div>
+      <div class="dr"><span class="dl">หน่วยเลือกตั้ง</span><span>${d.vote_unit||'—'}</span></div>
+      <div class="dr"><span class="dl">สถานที่เลือกตั้ง</span><span>${d.vote_place||'—'}</span></div>`
+      :`<div class="dr"><span class="dl">เหตุผล</span><span>${d.no_vote_reason||'—'}</span></div>`}
+    </div>
+    ${d.members?.length?`
+    <div class="modal-sec">
+      <div class="modal-sec-title">ครอบครัว (${d.members.length} คน)</div>
+      ${d.members.map((m,i)=>`
+        <div style="background:#f5f8fd;border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px;margin-bottom:8px">
+          <div style="font-weight:700;color:var(--navy2);font-size:13px;margin-bottom:6px">
+            ${i+1}. ${m.prefix}${m.first_name} ${m.last_name} — ${m.relationship}
+            <span style="margin-left:8px" class="badge ${m.has_vote_right?'badge-green':'badge-red'}">${m.has_vote_right?'✓ มีสิทธิ':'✗ ไม่มีสิทธิ'}</span>
+          </div>
+          ${m.has_vote_right?`
+          <div class="dr"><span class="dl">เขต/หน่วย</span><span>${m.vote_district||'—'} / ${m.vote_unit||'—'}</span></div>
+          <div class="dr"><span class="dl">สถานที่</span><span>${m.vote_place||'—'}</span></div>`
+          :`<div class="dr"><span class="dl">เหตุผล</span><span>${m.no_vote_reason||'—'}</span></div>`}
+        </div>`).join('')}
+    </div>`:''}`;
+  document.getElementById('detail-modal').classList.add('show');
+}
+
+async function deleteRecord(id){
+  if(!confirm('ยืนยันการลบข้อมูลนี้?')) return;
+  try{
+    const r=await fetch(`${API}/${id}`,{method:'DELETE',headers:authHeaders()});
+    const j=await r.json();
+    if(!r.ok) throw new Error(j.error);
+    showAlert('alert-list','✓ '+j.message);
+    loadList();loadStats();
+  }catch(e){showAlert('alert-list','✗ '+e.message,'error');}
+}
+
+// ── Export Excel ────────────────────────────────────────────────────────────
+async function exportExcel(){
+  try{
+    const r=await fetch(`${API}/export`,{headers:authHeaders()});
+    if(r.status===401){doLogout();return;}
+    const {data}=await r.json();
+    // Sheet 1: กำลังพล
+    const ws1=XLSX.utils.json_to_sheet(data.map((d,i)=>({
+      'ลำดับ':i+1,'ยศ':d.rank,'ชื่อ':d.first_name,'นามสกุล':d.last_name,
+      'มีสิทธิเลือกตั้ง':d.has_vote_right?'มี':'ไม่มี',
+      'เหตุผลที่ไม่มีสิทธิ':d.no_vote_reason||'',
+      'วันที่เลือกตั้ง':d.vote_date?new Date(d.vote_date).toLocaleDateString('th-TH'):'',
+      'เขตเลือกตั้ง':d.vote_district||'','หน่วยเลือกตั้ง':d.vote_unit||'','สถานที่':d.vote_place||'',
+      'จำนวนสมาชิกในครอบครัวที่มีสิทธิ':d.family_voter_count,
+    })));
+    // Sheet 2: ครอบครัว
+    const famRows=[];
+    data.forEach((d)=>{
+      (d.members||[]).forEach((m,j)=>{
+        famRows.push({
+          'ยศ/ชื่อ เจ้าของ':`${d.rank} ${d.first_name} ${d.last_name}`,
+          'ลำดับ':j+1,'คำนำหน้า':m.prefix,'ชื่อ':m.first_name,'นามสกุล':m.last_name,
+          'ความสัมพันธ์':m.relationship,
+          'มีสิทธิเลือกตั้ง':m.has_vote_right?'มี':'ไม่มี',
+          'เหตุผลที่ไม่มีสิทธิ':m.no_vote_reason||'',
+          'วันที่เลือกตั้ง':m.vote_date?new Date(m.vote_date).toLocaleDateString('th-TH'):'',
+          'เขตเลือกตั้ง':m.vote_district||'','หน่วยเลือกตั้ง':m.vote_unit||'','สถานที่':m.vote_place||'',
+        });
+      });
+    });
+    const ws2=XLSX.utils.json_to_sheet(famRows.length?famRows:[{'หมายเหตุ':'ไม่มีข้อมูล'}]);
+    const wb=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb,ws1,'กำลังพล');
+    XLSX.utils.book_append_sheet(wb,ws2,'ครอบครัว');
+    const today=new Date().toLocaleDateString('th-TH').replace(/\//g,'-');
+    XLSX.writeFile(wb,`election_survey_${today}.xlsx`);
+  }catch(e){showAlert('alert-dash','✗ Export ไม่สำเร็จ: '+e.message,'error');}
+}
+
+// ── Audit ───────────────────────────────────────────────────────────────────
+async function loadAudit(){
+  document.getElementById('audit-loader').style.display='block';
+  document.getElementById('audit-body').innerHTML='';
+  try{
+    const r=await fetch('/api/audit-logs',{headers:authHeaders()});
+    const {data:rows}=await r.json();
+    const map={CREATE:{l:'เพิ่มข้อมูล',c:'badge-green'},UPDATE:{l:'แก้ไขข้อมูล',c:'badge-gold'},DELETE:{l:'ลบข้อมูล',c:'badge-red'}};
+    document.getElementById('audit-body').innerHTML=!rows.length
+      ?`<tr><td colspan="5"><div class="empty-state">ยังไม่มีประวัติ</div></td></tr>`
+      :rows.map(r=>{
+        const a=map[r.action]||{l:r.action,c:'badge-navy'};
+        const dt=new Date(r.created_at);
+        return `<tr>
+          <td style="font-size:13px;white-space:nowrap">${dt.toLocaleDateString('th-TH',{day:'2-digit',month:'short',year:'numeric'})}<br><span style="color:var(--text3)">${dt.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'})}</span></td>
+          <td><span class="badge ${a.c}">${a.l}</span></td>
+          <td style="font-size:13px">${r.personnel_name||'—'}</td>
+          <td style="font-size:13px">${r.changed_by}</td>
+          <td style="font-size:13px;color:var(--text2)">${r.detail||'—'}</td>
+        </tr>`;
+      }).join('');
+  }catch(e){document.getElementById('audit-body').innerHTML=`<tr><td colspan="5"><div class="empty-state">⚠️ ${e.message}</div></td></tr>`;}
+  finally{document.getElementById('audit-loader').style.display='none';}
+}
+
+function closeModal(e){if(e.target===document.getElementById('detail-modal'))document.getElementById('detail-modal').classList.remove('show');}
+
+checkAuth();
+</script>
+</body>
+</html>

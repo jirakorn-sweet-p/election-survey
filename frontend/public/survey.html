@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>แบบสำรวจสิทธิเลือกตั้ง</title>
+<style>
+:root{
+  --navy:#0f2847;--navy2:#1e4080;--navy3:#2d5fa6;
+  --gold:#d4a017;--green:#16803c;--red:#be1b1b;
+  --bg:#f0f4f9;--surface:#fff;
+  --border:#d0daea;--border2:#b0c4de;
+  --text:#1a2640;--text2:#3d546e;--text3:#7a91aa;
+  --radius:12px;--radius-sm:8px;--shadow:0 2px 16px rgba(15,40,71,.10);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.65}
+.topbar{background:var(--navy);padding:0 1.5rem;display:flex;align-items:center;height:60px;box-shadow:0 2px 16px rgba(0,0,0,.3)}
+.brand{display:flex;align-items:center;gap:12px;color:#fff;font-size:16px;font-weight:700}
+.emblem{width:38px;height:38px;background:var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.container{max-width:780px;margin:0 auto;padding:2rem 1rem}
+.card{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;margin-bottom:1rem}
+.card-header{background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 100%);color:#fff;padding:1.25rem 1.5rem}
+.card-header h2{font-size:16px;font-weight:700}
+.card-header p{font-size:13px;opacity:.7;margin-top:3px}
+.card-body{padding:1.5rem}
+.sec{background:#f5f8fd;border:1px solid var(--border);border-radius:var(--radius-sm);padding:1.25rem;margin-bottom:1rem}
+.sec:last-child{margin-bottom:0}
+.sec-title{font-size:12px;font-weight:700;color:var(--navy2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:1rem}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.row4{display:grid;grid-template-columns:.8fr 1fr 1fr 1fr;gap:10px}
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:10px}
+.field:last-child{margin-bottom:0}
+label.lbl{font-size:13px;font-weight:600;color:var(--text2)}
+.req{color:var(--red)}
+input,select,textarea{border:1.5px solid var(--border2);border-radius:var(--radius-sm);padding:8px 12px;font-size:14px;font-family:inherit;background:#fff;color:var(--text);transition:.15s;width:100%}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--navy2);box-shadow:0 0 0 3px rgba(30,64,128,.1)}
+textarea{resize:vertical;min-height:60px}
+.vote-toggle{display:flex;gap:10px;margin-bottom:8px}
+.vote-btn{flex:1;padding:9px;border-radius:var(--radius-sm);border:1.5px solid var(--border2);background:#fff;cursor:pointer;font-family:inherit;font-size:14px;font-weight:700;transition:.15s;text-align:center}
+.vote-btn.yes.active{background:#dcfce7;border-color:var(--green);color:var(--green)}
+.vote-btn.no.active{background:#fee2e2;border-color:var(--red);color:var(--red)}
+.vote-detail{display:none;background:#fff;border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:1rem;margin-top:8px}
+.vote-detail.show{display:block}
+.member-card{background:#fff;border:1.5px solid var(--border2);border-radius:var(--radius-sm);padding:1rem;margin-bottom:10px}
+.member-badge{font-size:12px;font-weight:700;color:var(--navy2);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 20px;border-radius:var(--radius-sm);border:none;cursor:pointer;font-size:14px;font-family:inherit;font-weight:700;transition:.15s}
+.btn-success{background:var(--green);color:#fff}.btn-success:hover{background:#136834}
+.btn-outline{background:#fff;color:var(--text2);border:1.5px solid var(--border2)}.btn-outline:hover{border-color:var(--navy2);color:var(--navy2)}
+.btn-full{width:100%;justify-content:center;padding:12px;font-size:15px}
+.alert{padding:12px 16px;border-radius:var(--radius-sm);font-size:14px;margin-bottom:1rem;display:none}
+.alert-error{background:#fee2e2;border:1px solid #fca5a5;color:#991b1b}
+.count-row{display:flex;align-items:center;gap:10px}
+.count-row input{width:80px}
+.success-screen{display:none;text-align:center;padding:3rem 1rem}
+.success-icon{font-size:72px;margin-bottom:1rem}
+.success-screen h2{font-size:22px;font-weight:700;color:var(--green);margin-bottom:8px}
+.success-screen p{color:var(--text2);margin-bottom:1.5rem}
+@media(max-width:640px){.row2,.row4{grid-template-columns:1fr}.container{padding:1rem .75rem}}
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="topbar">
+  <div class="brand"><div class="emblem">🗳</div><div>แบบสำรวจสิทธิเลือกตั้ง</div></div>
+</div>
+<div class="container">
+  <div id="alert-box" class="alert"></div>
+  <div class="card">
+    <div class="card-header"><h2>แบบสำรวจข้อมูลสิทธิเลือกตั้ง</h2><p>กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง</p></div>
+    <div class="card-body">
+      <div class="success-screen" id="success-screen">
+        <div class="success-icon">✅</div>
+        <h2>บันทึกข้อมูลเรียบร้อยแล้ว</h2>
+        <p>ขอบคุณสำหรับการกรอกแบบสำรวจสิทธิเลือกตั้ง</p>
+        <button class="btn btn-success" onclick="resetForm()">กรอกข้อมูลใหม่</button>
+      </div>
+      <form id="survey-form" onsubmit="submitForm(event)">
+        <div class="sec">
+          <div class="sec-title">👤 ข้อมูลส่วนตัว</div>
+          <div class="row2" style="margin-bottom:10px">
+            <div class="field">
+              <label class="lbl">ยศ <span class="req">*</span></label>
+              <select id="f-rank" required>
+                <option value="">— เลือกยศ —</option>
+                <option>ส.ต.</option><option>ส.ท.</option><option>ส.อ.</option>
+                <option>จ.ส.ต.</option><option>จ.ส.ท.</option><option>จ.ส.อ.</option>
+                <option>ร.ต.</option><option>ร.ท.</option><option>ร.อ.</option>
+              </select>
+            </div>
+          </div>
+          <div class="row2">
+            <div class="field"><label class="lbl">ชื่อ <span class="req">*</span></label><input type="text" id="f-fname" placeholder="ชื่อ" required></div>
+            <div class="field"><label class="lbl">นามสกุล <span class="req">*</span></label><input type="text" id="f-lname" placeholder="นามสกุล" required></div>
+          </div>
+        </div>
+
+        <div class="sec">
+          <div class="sec-title">🗳️ สิทธิในการเลือกตั้ง (ตนเอง)</div>
+          <div class="field">
+            <label class="lbl">มีสิทธิเลือกตั้งหรือไม่ <span class="req">*</span></label>
+            <div class="vote-toggle">
+              <button type="button" class="vote-btn yes active" id="self-yes" onclick="setVote('self',true)">✓ มีสิทธิ</button>
+              <button type="button" class="vote-btn no" id="self-no" onclick="setVote('self',false)">✗ ไม่มีสิทธิ</button>
+            </div>
+          </div>
+          <div class="vote-detail show" id="self-detail-yes">
+            <div class="row2">
+              <div class="field"><label class="lbl">วันที่เลือกตั้ง</label><input type="date" id="f-vdate"></div>
+              <div class="field"><label class="lbl">เขตเลือกตั้ง</label><input type="text" id="f-vdistrict" placeholder="เช่น เขต 1"></div>
+            </div>
+            <div class="row2">
+              <div class="field"><label class="lbl">หน่วยเลือกตั้ง</label><input type="text" id="f-vunit" placeholder="เช่น หน่วยที่ 5"></div>
+              <div class="field"><label class="lbl">สถานที่เลือกตั้ง</label><input type="text" id="f-vplace" placeholder="เช่น โรงเรียน..."></div>
+            </div>
+          </div>
+          <div class="vote-detail" id="self-detail-no">
+            <div class="field"><label class="lbl">เหตุผลที่ไม่มีสิทธิ <span class="req">*</span></label><textarea id="f-noreason" placeholder="ระบุเหตุผล เช่น ไม่มีชื่อในทะเบียนบ้าน, ถูกตัดสิทธิ..."></textarea></div>
+          </div>
+        </div>
+
+        <div class="sec">
+          <div class="sec-title">👨‍👩‍👧 ข้อมูลครอบครัว</div>
+          <div class="field" style="margin-bottom:1rem">
+            <label class="lbl">จำนวนผู้มีสิทธิเลือกตั้งในครอบครัว (ไม่นับตัวเอง)</label>
+            <div class="count-row">
+              <input type="number" id="f-voter-count" min="0" value="0" onchange="updateMembers(+this.value)">
+              <span style="font-size:13px;color:var(--text3)">คน</span>
+            </div>
+          </div>
+          <div id="members-wrap"></div>
+        </div>
+
+        <div style="display:flex;gap:10px;margin-top:1rem">
+          <button type="submit" class="btn btn-success btn-full" id="btn-submit">✓ บันทึกข้อมูล</button>
+          <button type="button" class="btn btn-outline" onclick="resetForm()" style="min-width:110px;justify-content:center">ล้างข้อมูล</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<script>
+const API='/api/surveys';
+const PFX=['นาย','นาง','นางสาว','เด็กชาย','เด็กหญิง'];
+let selfHasVote=true;
+
+function setVote(scope,hasVote){
+  if(scope==='self'){
+    selfHasVote=hasVote;
+    document.getElementById('self-yes').classList.toggle('active',hasVote);
+    document.getElementById('self-no').classList.toggle('active',!hasVote);
+    document.getElementById('self-detail-yes').classList.toggle('show',hasVote);
+    document.getElementById('self-detail-no').classList.toggle('show',!hasVote);
+  } else {
+    const i=scope.split('-')[1], isYes=scope.split('-')[2]==='yes';
+    document.getElementById(`m${i}-yes`).classList.toggle('active',isYes);
+    document.getElementById(`m${i}-no`).classList.toggle('active',!isYes);
+    document.getElementById(`m${i}-dyes`).classList.toggle('show',isYes);
+    document.getElementById(`m${i}-dno`).classList.toggle('show',!isYes);
+  }
+}
+
+function updateMembers(n){
+  n=Math.max(0,n);
+  const w=document.getElementById('members-wrap');
+  w.innerHTML='';
+  if(!n) return;
+  for(let i=1;i<=n;i++){
+    const d=document.createElement('div');
+    d.className='member-card';
+    d.innerHTML=`
+      <div class="member-badge">สมาชิกคนที่ ${i}</div>
+      <div class="row4" style="margin-bottom:10px">
+        <div class="field" style="margin:0"><label class="lbl">คำนำหน้า</label>
+          <select id="m${i}-pfx">${PFX.map(p=>`<option>${p}</option>`).join('')}</select></div>
+        <div class="field" style="margin:0"><label class="lbl">ชื่อ</label><input type="text" id="m${i}-fn" placeholder="ชื่อ" required></div>
+        <div class="field" style="margin:0"><label class="lbl">นามสกุล</label><input type="text" id="m${i}-ln" placeholder="นามสกุล" required></div>
+        <div class="field" style="margin:0"><label class="lbl">เกี่ยวข้องเป็น</label><input type="text" id="m${i}-rel" placeholder="เช่น ภรรยา" required></div>
+      </div>
+      <div class="field">
+        <label class="lbl">มีสิทธิเลือกตั้งหรือไม่</label>
+        <div class="vote-toggle">
+          <button type="button" class="vote-btn yes active" id="m${i}-yes" onclick="setVote('m-${i}-yes',true)">✓ มีสิทธิ</button>
+          <button type="button" class="vote-btn no" id="m${i}-no" onclick="setVote('m-${i}-no',false)">✗ ไม่มีสิทธิ</button>
+        </div>
+      </div>
+      <div class="vote-detail show" id="m${i}-dyes">
+        <div class="row2">
+          <div class="field"><label class="lbl">วันที่เลือกตั้ง</label><input type="date" id="m${i}-vdate"></div>
+          <div class="field"><label class="lbl">เขตเลือกตั้ง</label><input type="text" id="m${i}-vdist" placeholder="เช่น เขต 1"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label class="lbl">หน่วยเลือกตั้ง</label><input type="text" id="m${i}-vunit" placeholder="เช่น หน่วยที่ 5"></div>
+          <div class="field"><label class="lbl">สถานที่เลือกตั้ง</label><input type="text" id="m${i}-vplace" placeholder="เช่น โรงเรียน..."></div>
+        </div>
+      </div>
+      <div class="vote-detail" id="m${i}-dno">
+        <div class="field"><label class="lbl">เหตุผลที่ไม่มีสิทธิ</label><textarea id="m${i}-noreason" placeholder="ระบุเหตุผล"></textarea></div>
+      </div>`;
+    w.appendChild(d);
+  }
+}
+
+function g(id){return document.getElementById(id)}
+
+function collectData(){
+  const n=+g('f-voter-count').value||0;
+  const members=[];
+  for(let i=1;i<=n;i++){
+    const hasV=g(`m${i}-yes`).classList.contains('active');
+    members.push({
+      prefix:g(`m${i}-pfx`).value,first_name:g(`m${i}-fn`).value.trim(),
+      last_name:g(`m${i}-ln`).value.trim(),relationship:g(`m${i}-rel`).value.trim(),
+      has_vote_right:hasV,
+      no_vote_reason:!hasV?g(`m${i}-noreason`).value.trim()||null:null,
+      vote_date:hasV?g(`m${i}-vdate`).value||null:null,
+      vote_district:hasV?g(`m${i}-vdist`).value.trim()||null:null,
+      vote_unit:hasV?g(`m${i}-vunit`).value.trim()||null:null,
+      vote_place:hasV?g(`m${i}-vplace`).value.trim()||null:null,
+    });
+  }
+  return{
+    rank:g('f-rank').value,first_name:g('f-fname').value.trim(),last_name:g('f-lname').value.trim(),
+    has_vote_right:selfHasVote,
+    no_vote_reason:!selfHasVote?g('f-noreason').value.trim()||null:null,
+    vote_date:selfHasVote?g('f-vdate').value||null:null,
+    vote_district:selfHasVote?g('f-vdistrict').value.trim()||null:null,
+    vote_unit:selfHasVote?g('f-vunit').value.trim()||null:null,
+    vote_place:selfHasVote?g('f-vplace').value.trim()||null:null,
+    family_voter_count:n,members,
+  };
+}
+
+async function submitForm(e){
+  e.preventDefault();
+  const btn=g('btn-submit');
+  btn.disabled=true;btn.textContent='กำลังบันทึก...';
+  try{
+    const res=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(collectData())});
+    const json=await res.json();
+    if(!res.ok) throw new Error(json.error||'เกิดข้อผิดพลาด');
+    g('survey-form').style.display='none';
+    g('success-screen').style.display='block';
+  }catch(err){
+    const el=g('alert-box');
+    el.className='alert alert-error';el.textContent='✗ '+err.message;el.style.display='block';
+    setTimeout(()=>el.style.display='none',5000);
+  }finally{btn.disabled=false;btn.textContent='✓ บันทึกข้อมูล';}
+}
+
+function resetForm(){
+  document.getElementById('survey-form').reset();
+  document.getElementById('survey-form').style.display='block';
+  document.getElementById('success-screen').style.display='none';
+  document.getElementById('members-wrap').innerHTML='';
+  selfHasVote=true;setVote('self',true);
+}
+</script>
+</body>
+</html>
